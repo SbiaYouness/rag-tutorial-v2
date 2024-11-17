@@ -1,8 +1,8 @@
 import argparse
-from langchain.vectorstores.chroma import Chroma
+import time
+from langchain_chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
-from langchain_community.llms.ollama import Ollama
-
+from langchain_ollama import OllamaLLM
 from get_embedding_function import get_embedding_function
 
 CHROMA_PATH = "chroma"
@@ -28,6 +28,10 @@ def main():
 
 
 def query_rag(query_text: str):
+    # Start the timer
+    start_time = time.time()
+    print(f"Question: {query_text}")
+
     # Prepare the DB.
     embedding_function = get_embedding_function()
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
@@ -40,12 +44,18 @@ def query_rag(query_text: str):
     prompt = prompt_template.format(context=context_text, question=query_text)
     # print(prompt)
 
-    model = Ollama(model="mistral")
+    model = OllamaLLM(model="Mistral")
     response_text = model.invoke(prompt)
 
     sources = [doc.metadata.get("id", None) for doc, _score in results]
     formatted_response = f"Response: {response_text}\nSources: {sources}"
-    print(formatted_response)
+    
+    # Stop the timer
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Response: {response_text}\nSources: {sources}")
+    print(f"Elapsed time: {elapsed_time:.2f} seconds")
+
     return response_text
 
 
